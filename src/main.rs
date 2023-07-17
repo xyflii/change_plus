@@ -1,5 +1,5 @@
 use std::env;
-mod util;
+use change_plus::{recur_change_dir,rewrite_file};
 fn main() {
     println!("-----------------------------------------");
     let path_curr = env::current_dir().unwrap();
@@ -26,13 +26,13 @@ fn main() {
             path = String::new();
         }
     }
-    match util::rewrite_file(&path_curr, &word_from, &word_to) {
+    match rewrite_file(&path_curr, &word_from, &word_to) {
         Ok(()) => (),
         Err(error) => {
             println!("文件操作失败:{:?}", error)
         }
     };
-    match util::recur_change_dir(&path_curr, &word_from, &word_to) {
+    match recur_change_dir(&path_curr, &word_from, &word_to) {
         Ok(())=>(),
         Err(error)=>{
             println!("文件夹修改失败:{:?}",error)
