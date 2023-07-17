@@ -29,41 +29,27 @@ fn main() {
             path = String::new();
         }
     }
-    // for entry in WalkDir::new("D:\\rustLearning\\test")
-    //     .into_iter()
-    //     .filter_map(|e| e.ok())
-    // {
-    //     println!("{}", entry.path().display());
-    //     if entry.path().is_file() {
-    //         let mut src = File::open(entry.path()).expect("打开文件报错");
-    //         let mut data = String::new();
-    //         src.read_to_string(&mut data).expect("读取文件报错");
-    //         drop(src); // Close the file early
-    //         let new_data = data.replace(&*word_from, &*word_to);
-    //         let mut dst = File::create(entry.path()).expect("创建新文件报错");
-    //         dst.write(new_data.as_bytes()).expect("写入文件报错");
-    //         println!("done");
-    //     }
-    // }
     match rewrite_file(&path_curr, &word_from, &word_to) {
         Ok(()) => (),
         Err(error) => {
             println!("文件操作失败:{:?}", error)
         }
     };
-    match rewrite_dir(&path_curr, word_from, word_to){
-        Ok(()) => (),
-        Err(error) => {
-            println!("文件夹操作失败:{:?}", error)
+    match  recur_change_dir(&path_curr, &word_from, &word_to) {
+        Ok(())=>(),
+        Err(error)=>{
+            println!("文件夹修改失败:{:?}",error)
         }
-    };
+    }
     println!("按回车键退出");
     std::io::stdin().read_line(&mut quit).unwrap();
 }
 
 fn rewrite_file(path: &PathBuf, from: &String, to: &String) -> Result<(), io::Error> {
-    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
-        println!("{}", entry.path().display());
+    for entry in WalkDir::new(path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         if entry.path().is_file() {
             let mut src = match File::open(entry.path()) {
                 Ok(file) => file,
@@ -74,8 +60,8 @@ fn rewrite_file(path: &PathBuf, from: &String, to: &String) -> Result<(), io::Er
             };
             let file_name = entry.path().file_name().unwrap().to_str().unwrap();
             let new_file_name = file_name.replace(&*from, &*to);
-            let  new_path = entry.path().with_file_name(new_file_name);
-            fs::rename(entry.path(), & new_path).unwrap();
+            let new_path = entry.path().with_file_name(new_file_name);
+            fs::rename(entry.path(), &new_path).unwrap();
             println!("file_name:{}", file_name);
             println!("done");
             let mut data = String::new();
@@ -89,7 +75,7 @@ fn rewrite_file(path: &PathBuf, from: &String, to: &String) -> Result<(), io::Er
 
             drop(src); // Close the file early
             let new_data = data.replace(&*from, &*to);
-            let mut dst = match File::create(& new_path) {
+            let mut dst = match File::create(&new_path) {
                 Ok(file) => file,
                 Err(error) => {
                     println!("创建临时文件报错:{:?}", error);
@@ -103,24 +89,31 @@ fn rewrite_file(path: &PathBuf, from: &String, to: &String) -> Result<(), io::Er
                     continue;
                 }
             };
-       
         }
     }
     Ok(())
 }
 
-fn rewrite_dir(path: &PathBuf, from: String, to: String) -> Result<(), io::Error>{
-    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
-        if entry.path().is_dir() {
-            if(entry.path() != path){
-                println!("path:{:?}",entry.path());
-                let file_name = entry.path().file_name().unwrap().to_str().unwrap();
-                let new_file_name = file_name.replace(&*from, &*to);
-                let  new_path = entry.path().with_file_name(new_file_name);
-                fs::rename(entry.path(), & new_path)?;
-                println!("重写文件夹:{}", file_name);
-                println!("done");
+fn recur_change_dir(path:&PathBuf,from: &String,to: &String)->Result<(),io::Error>{
+    let dir = fs::read_dir(path).unwrap();
+    for entry_result in dir{
+        let entry = match entry_result {
+            Ok(entry)=>entry,
+            Err(err)=>{
+                println!("2-文件读取失败:{:?}",err);
+                continue;
             }
+        };
+        println!("entry:{:?}",entry.path());
+        if entry.path().is_dir(){
+            let oldpath = entry.path();
+            let file_name = oldpath.file_name().unwrap().to_str().unwrap();
+            let new_file_name = file_name.replace(&*from, &*to);
+            let new_path = entry.path().with_file_name(new_file_name);
+            fs::rename(entry.path(), &new_path)?;
+            println!("重写文件夹:{}", file_name);
+            println!("done");
+            recur_change_dir(&new_path, &from, &to).unwrap();
         }
     }
     Ok(())
