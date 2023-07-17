@@ -45,18 +45,24 @@ fn main() {
     //         println!("done");
     //     }
     // }
-    match rewrite(path_curr, word_from, word_to) {
+    match rewrite_file(&path_curr, &word_from, &word_to) {
         Ok(()) => (),
         Err(error) => {
             println!("文件操作失败:{:?}", error)
+        }
+    };
+    match rewrite_dir(&path_curr, word_from, word_to){
+        Ok(()) => (),
+        Err(error) => {
+            println!("文件夹操作失败:{:?}", error)
         }
     };
     println!("按回车键退出");
     std::io::stdin().read_line(&mut quit).unwrap();
 }
 
-fn rewrite(path: PathBuf, from: String, to: String) -> Result<(), io::Error> {
-    for entry in WalkDir::new("D:\\rustLearning\\test").into_iter().filter_map(|e| e.ok()) {
+fn rewrite_file(path: &PathBuf, from: &String, to: &String) -> Result<(), io::Error> {
+    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
         println!("{}", entry.path().display());
         if entry.path().is_file() {
             let mut src = match File::open(entry.path()) {
@@ -98,6 +104,23 @@ fn rewrite(path: PathBuf, from: String, to: String) -> Result<(), io::Error> {
                 }
             };
        
+        }
+    }
+    Ok(())
+}
+
+fn rewrite_dir(path: &PathBuf, from: String, to: String) -> Result<(), io::Error>{
+    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
+        if entry.path().is_dir() {
+            if(entry.path() != path){
+                println!("path:{:?}",entry.path());
+                let file_name = entry.path().file_name().unwrap().to_str().unwrap();
+                let new_file_name = file_name.replace(&*from, &*to);
+                let  new_path = entry.path().with_file_name(new_file_name);
+                fs::rename(entry.path(), & new_path)?;
+                println!("重写文件夹:{}", file_name);
+                println!("done");
+            }
         }
     }
     Ok(())
