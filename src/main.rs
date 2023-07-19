@@ -1,5 +1,7 @@
 use std::env;
 use change_plus::{recur_change_dir,rewrite_file};
+mod jsonUtil;
+
 fn main() {
     println!("-----------------------------------------");
     let path_curr = env::current_dir().unwrap();
@@ -26,18 +28,12 @@ fn main() {
             path = String::new();
         }
     }
-    match rewrite_file(&path_curr, &word_from, &word_to) {
+    match jsonUtil::rewrite_only_json(&path_curr, &word_from, &word_to) {
         Ok(()) => (),
         Err(error) => {
             println!("文件操作失败:{:?}", error)
         }
     };
-    match recur_change_dir(&path_curr, &word_from, &word_to) {
-        Ok(())=>(),
-        Err(error)=>{
-            println!("文件夹修改失败:{:?}",error)
-        }
-    }
     println!("按回车键退出");
     std::io::stdin().read_line(&mut quit).unwrap();
 }
