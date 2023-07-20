@@ -1,6 +1,5 @@
 use std::env;
-use change_plus::{recur_change_dir,rewrite_file};
-mod jsonUtil;
+mod json_util;
 
 fn main() {
     println!("-----------------------------------------");
@@ -8,8 +7,9 @@ fn main() {
     println!("当前路径为:{:?}", path_curr);
     let mut path = String::new();
     let mut quit = String::new();
-    let mut word_from = String::new();
-    let mut word_to = String::new();
+    #[warn(unused_assignments)]
+    let  word_from;
+    let  word_to ;
     loop {
         println!("替换请输入yes,还原请输入no:");
         std::io::stdin().read_line(&mut path).unwrap();
@@ -28,7 +28,7 @@ fn main() {
             path = String::new();
         }
     }
-    match jsonUtil::rewrite_only_json(&path_curr, &word_from, &word_to) {
+    match json_util::rewrite_only_json(&path_curr, &word_from, &word_to) {
         Ok(()) => (),
         Err(error) => {
             println!("文件操作失败:{:?}", error)
