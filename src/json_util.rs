@@ -2,9 +2,9 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
-use std::fs::File;
 use walkdir::WalkDir;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -82,10 +82,7 @@ pub struct Content {
  * @return {Result<(), io::Error>}      Result::Ok
  */
 pub fn rewrite_only_json(path: &PathBuf, from: &String, to: &String) -> Result<(), io::Error> {
-    for entry in WalkDir::new(path)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
+    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
         if entry.path().is_file() {
             if confirm_ending(&entry.path().to_str().unwrap(), &String::from("json")) {
                 let mut src = match File::open(entry.path()) {
@@ -107,7 +104,7 @@ pub fn rewrite_only_json(path: &PathBuf, from: &String, to: &String) -> Result<(
 
                 drop(src); // Close the file early
                            // println!("path:{:?}",entry.path());
-                let  new_data: HashMap<String, Value> = serde_json::from_str(&data).unwrap();
+                let new_data: HashMap<String, Value> = serde_json::from_str(&data).unwrap();
                 let write_data = serde_json::to_string(&rewrite_json(new_data, from, to)).unwrap();
                 println!("write_data:{:#?}", write_data);
                 // let new_data = data.replace(&*from, &*to);
@@ -131,7 +128,6 @@ pub fn rewrite_only_json(path: &PathBuf, from: &String, to: &String) -> Result<(
     Ok(())
 }
 
-
 /**
  * @description:             确认文件后缀名
  * @param {String} str       传入的文件名
@@ -147,13 +143,10 @@ pub fn confirm_ending(str: &str, target: &String) -> bool {
     return false;
 }
 
-
-
-
 /**
  * @description: 替换json中的字符
  * @param {HashMap<string,Value>} map  传入的反序列化后的json
- * @param {&String} from    被替换的字符 
+ * @param {&String} from    被替换的字符
  * @param {&String} to      要替换的字符
  * @return {HashMap<String,Value}   返回的替换后的serde json
  */
@@ -206,7 +199,7 @@ pub fn rewrite_children(item: &mut Value, from: &String, to: &String) -> () {
                 inner["content"]["uri"] = serde_json::to_value(str).unwrap();
             }
             if let Some(_) = inner["children"].as_array_mut() {
-                    rewrite_children(inner, from, to);
+                rewrite_children(inner, from, to);
             }
         }
     }

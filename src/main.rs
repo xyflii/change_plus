@@ -34,6 +34,7 @@ fn main() {
             println!("文件操作失败:{:?}", error)
         }
     };
+    println!("结束");
     println!("按回车键退出");
     std::io::stdin().read_line(&mut quit).unwrap();
 }
